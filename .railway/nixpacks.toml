@@ -1,0 +1,10 @@
+# This file prevents Railpack from treating the repo root as a deployable Node.js service.
+# The root package.json contains only TypeScript dev-tooling for .railway/railway.ts.
+# Each deployable service (backend, hop, cube, litellm) has its own subfolder with a Dockerfile.
+# Railway services must set their Root Directory to the appropriate subfolder.
+
+[phases.setup]
+nixPkgs = []
+
+[start]
+cmd = "echo 'Repo root is not a deployable service. Set Root Directory to backend/, hop/, cube/, or litellm/ for each Railway service.'"
