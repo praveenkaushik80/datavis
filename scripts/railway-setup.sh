@@ -2,6 +2,7 @@
 # scripts/railway-setup.sh
 # One-shot Railway project setup for DataVis.
 #
+<<<<<<< Updated upstream
 # Prerequisites:
 #   - Railway CLI 5.42.1+  (npm i -g @railway/cli)
 #   - Node.js 20+
@@ -13,6 +14,11 @@
 # Usage:
 #   export DATAFUSION_GITHUB_REPO=praveenkaushik80/datavis
 #   export OPENROUTER_API_KEY=sk-or-...
+=======
+#   export DATAFUSION_GITHUB_REPO=praveenkaushik80/datavis     # the GitHub repo Railway builds from
+#   export OPENROUTER_API_KEY=sk-or-...                        # only needed on the first run
+#   railway login && railway link                              # link this folder to a Railway project
+>>>>>>> Stashed changes
 #   ./scripts/railway-setup.sh
 #
 # Re-running is safe: existing secrets are never overwritten.

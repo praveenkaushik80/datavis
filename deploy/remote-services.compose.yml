@@ -22,7 +22,7 @@ services:
       HOP_ENVIRONMENT_NAME: remote
       HOP_ENVIRONMENT_CONFIG_FILE_NAME_PATHS: /environments/datafusion-remote.json
       HOP_OPTIONS: >-
-        -XX:+AggressiveHeap -Dorg.eclipse.rap.rwt.resourceLocation=/tmp/rwt-resources
+        -Xms256m -Xmx1536m -Dorg.eclipse.rap.rwt.resourceLocation=/tmp/rwt-resources
         -DDATAFUSION_API_URL=${DATAFUSION_API_URL}
         -DHOP_API_TOKEN=${HOP_API_TOKEN} -DHOP_ADMIN_TOKEN=${HOP_ADMIN_TOKEN}
     volumes:

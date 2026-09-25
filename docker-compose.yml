@@ -125,7 +125,7 @@ services:
       # Tokens reach Hop as Java system properties (Hop does not expand OS environment variables in
       # environment files). The first two flags are the image defaults and must be kept.
       HOP_OPTIONS: >-
-        -XX:+AggressiveHeap -Dorg.eclipse.rap.rwt.resourceLocation=/tmp/rwt-resources
+        -Xms256m -Xmx1536m -Dorg.eclipse.rap.rwt.resourceLocation=/tmp/rwt-resources
         -DHOP_API_TOKEN=${HOP_API_TOKEN} -DHOP_ADMIN_TOKEN=${HOP_ADMIN_TOKEN}
     volumes:
       - ./hop/datafusion:/project
