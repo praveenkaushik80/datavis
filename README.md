@@ -1,6 +1,6 @@
-# DataFusion MVP
+# DataVis MVP
 
-Implements the DataFusion HLD and end-to-end flows:
+Implements the DataVis HLD and end-to-end flows:
 
 * **Flow A (MVP1)**: connect a database, build and approve the semantic context.
 * **Flow B (MVP2)**: a governed agent answers questions through auto-generated MCP servers.
