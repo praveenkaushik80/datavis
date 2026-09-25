@@ -4,6 +4,7 @@
   "description": "Tooling for the Railway Infrastructure-as-Code definition (.railway/railway.ts).",
   "type": "module",
   "scripts": {
+    "start": "echo 'not a node app'",
     "railway:check": "tsc -p .railway/tsconfig.json && node .railway/inspect.mjs"
   },
   "devDependencies": {
