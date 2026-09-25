@@ -1,0 +1,24 @@
+{
+  "variables": [
+    {
+      "name": "DF_API_URL",
+      "value": "http://backend:8000",
+      "description": "DataFusion API base URL"
+    },
+    {
+      "name": "DF_API_TOKEN",
+      "value": "${HOP_API_TOKEN}",
+      "description": "Steward service token (from the environment)"
+    },
+    {
+      "name": "DF_ADMIN_TOKEN",
+      "value": "${HOP_ADMIN_TOKEN}",
+      "description": "Admin token for admin workflows"
+    },
+    {
+      "name": "DF_API_READ_TIMEOUT_MS",
+      "value": "900000",
+      "description": "Research can take several minutes"
+    }
+  ]
+}

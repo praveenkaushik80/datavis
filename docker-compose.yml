@@ -1,0 +1,146 @@
+# DataFusion MVP: everything in Docker. For the Vercel deployment see README ("Deploy on Vercel").
+#   docker compose up -d --build                     core stack (Hop Web, API, Cube, LiteLLM, databases)
+#   ./scripts/openmetadata.sh up                     optional: OpenMetadata 2.0.2 on the same network
+#
+# Front ends:  Hop Web  http://localhost:8080   |  API docs  http://localhost:8000/docs
+#              Cube playground http://localhost:4000   |  OpenMetadata http://localhost:8585
+
+name: datafusion
+
+x-backend-env: &backend-env
+  APP_DB_URL: postgresql+psycopg://datafusion:${APP_DB_PASSWORD}@app-db:5432/datafusion
+  FERNET_KEY: ${FERNET_KEY}
+  JWT_SECRET: ${JWT_SECRET}
+  INTERNAL_TOKEN: ${INTERNAL_TOKEN}
+  HOP_API_TOKEN: ${HOP_API_TOKEN}
+  HOP_ADMIN_TOKEN: ${HOP_ADMIN_TOKEN}
+  AUTH_MODE: ${AUTH_MODE:-otp}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_FROM: ${SMTP_FROM:-datafusion@localhost}
+  LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+  LLM_BASE_URL: ${LLM_BASE_URL:-http://litellm:4000/v1}
+  LLM_API_KEY: ${LITELLM_MASTER_KEY}
+  LLM_MODEL_AGENT: ${LLM_MODEL_AGENT:-datafusion-agent}
+  LLM_MODEL_RESEARCH: ${LLM_MODEL_RESEARCH:-datafusion-research}
+  WEB_SEARCH_PROVIDER: ${WEB_SEARCH_PROVIDER:-none}
+  TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+  OM_URL: ${OM_URL:-}
+  OM_TOKEN: ${OM_TOKEN:-}
+  CUBE_API_URL: http://cube:4000/cubejs-api/v1
+  CUBE_API_SECRET: ${CUBE_API_SECRET}
+  SHARED_DIR: /shared
+  MCP_TRANSPORT: stdio
+
+services:
+  app-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: datafusion
+      POSTGRES_USER: datafusion
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD}
+    volumes:
+      - app-db:/var/lib/postgresql/data
+      - ./infra/app-db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U datafusion -d datafusion"]
+      interval: 5s
+      retries: 20
+
+  # Sample client database ("shop"). Remove this service to use only your own databases.
+  client-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: shop
+      POSTGRES_USER: shop_owner
+      POSTGRES_PASSWORD: ${CLIENT_DB_OWNER_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - client-db:/var/lib/postgresql/data
+      - ./infra/client-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shop_owner -d shop"]
+      interval: 5s
+      retries: 20
+
+  # LLM gateway: approved models + budget, forwarding to OpenRouter (see litellm/config.yaml)
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    environment:
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_DATABASE_URL: postgresql://datafusion:${APP_DB_PASSWORD}@app-db:5432/litellm
+      OR_SITE_URL: https://datafusion.local
+      OR_APP_NAME: DataFusion
+    volumes:
+      - ./litellm/config.yaml:/app/config.yaml:ro
+    depends_on:
+      app-db:
+        condition: service_healthy
+    ports:
+      - "4001:4000"
+
+  backend:
+    build:
+      context: ./backend
+      args:
+        INSTALL_MVP2_DRIVERS: ${INSTALL_MVP2_DRIVERS:-false}
+        INSTALL_DOCLING: ${INSTALL_DOCLING:-false}
+    environment: *backend-env
+    volumes:
+      - ./data/shared:/shared
+    depends_on:
+      app-db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  cube:
+    image: cubejs/cube:v1.7.45
+    environment:
+      CUBEJS_DEV_MODE: ${CUBEJS_DEV_MODE:-true}
+      CUBEJS_API_SECRET: ${CUBE_API_SECRET}
+      DATAFUSION_API_URL: http://backend:8000
+      DATAFUSION_INTERNAL_TOKEN: ${INTERNAL_TOKEN}
+    volumes:
+      - ./cube/cube.js:/cube/conf/cube.js:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+
+  # Apache Hop Web: the operator front end (Flow A steps, Flow B test questions, admin, observability)
+  hop-web:
+    image: apache/hop-web:2.19.0
+    environment:
+      HOP_PROJECT_NAME: datafusion
+      HOP_PROJECT_FOLDER: /project
+      HOP_ENVIRONMENT_NAME: docker
+      HOP_ENVIRONMENT_CONFIG_FILE_NAME_PATHS: /environments/datafusion-docker.json
+      # Tokens reach Hop as Java system properties (Hop does not expand OS environment variables in
+      # environment files). The first two flags are the image defaults and must be kept.
+      HOP_OPTIONS: >-
+        -XX:+AggressiveHeap -Dorg.eclipse.rap.rwt.resourceLocation=/tmp/rwt-resources
+        -DHOP_API_TOKEN=${HOP_API_TOKEN} -DHOP_ADMIN_TOKEN=${HOP_ADMIN_TOKEN}
+    volumes:
+      - ./hop/datafusion:/project
+      - ./hop/environments:/environments:ro
+      - ./data/shared:/shared
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+volumes:
+  app-db:
+  client-db:
+
+networks:
+  default:
+    name: datafusion

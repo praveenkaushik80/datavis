@@ -1,0 +1,2 @@
+# Better PDF / Word parsing. Pulls in PyTorch; expect a multi-GB image.
+docling>=2.50

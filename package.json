@@ -1,0 +1,15 @@
+{
+  "name": "datafusion-mvp",
+  "private": true,
+  "description": "Tooling for the Railway Infrastructure-as-Code definition (.railway/railway.ts).",
+  "type": "module",
+  "scripts": {
+    "railway:check": "tsc -p .railway/tsconfig.json && node .railway/inspect.mjs"
+  },
+  "devDependencies": {
+    "railway": "3.11.0",
+    "typescript": "5.9.3",
+    "tsx": "^4.20.0",
+    "@types/node": "^22.0.0"
+  }
+}

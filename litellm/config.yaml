@@ -1,0 +1,31 @@
+# LLM gateway: approved models and budgets. Every model is served by OpenRouter.
+# Change the OpenRouter model ids here; the DataFusion backend only knows the aliases.
+model_list:
+  - model_name: datafusion-agent            # Flow B question-answering agent (needs tool calling)
+    litellm_params:
+      model: openrouter/anthropic/claude-sonnet-5
+      api_key: os.environ/OPENROUTER_API_KEY
+  - model_name: datafusion-research         # Flow A context research agent
+    litellm_params:
+      model: openrouter/anthropic/claude-sonnet-5
+      api_key: os.environ/OPENROUTER_API_KEY
+  - model_name: datafusion-fallback         # cheaper fallback if the primary model errors
+    litellm_params:
+      model: openrouter/anthropic/claude-haiku-4.5
+      api_key: os.environ/OPENROUTER_API_KEY
+
+router_settings:
+  fallbacks:
+    - datafusion-agent: ["datafusion-fallback"]
+    - datafusion-research: ["datafusion-fallback"]
+  num_retries: 2
+  timeout: 120
+
+litellm_settings:
+  drop_params: true
+  max_budget: 100          # USD across the proxy for each budget period
+  budget_duration: 30d
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/LITELLM_DATABASE_URL

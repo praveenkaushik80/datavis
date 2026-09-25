@@ -1,0 +1,5 @@
+# MVP2 connectors: MySQL, SQL Server, Oracle, Snowflake
+pymysql>=1.1
+pymssql>=2.3
+oracledb>=2.5
+snowflake-sqlalchemy>=1.7

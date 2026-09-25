@@ -1,0 +1,7 @@
+Shop business rules (sample supporting document)
+
+Revenue is the sum of quantity x unit_price for order items on orders with status 'paid'.
+Refunded and cancelled orders are excluded from revenue.
+A business customer has segment = 'business'. Consumer customers have segment = 'consumer'.
+The partner channel means the order was placed by a reseller on behalf of the customer.
+Customer email addresses are personal data and must not be shown in reports.

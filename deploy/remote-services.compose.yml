@@ -1,0 +1,33 @@
+# Cube and Hop Web for a DataFusion API hosted on Vercel. Run on any Docker host (VM, Render, Railway...):
+#   cp deploy/remote.env.example deploy/remote.env   # fill in
+#   docker compose -f deploy/remote-services.compose.yml --env-file deploy/remote.env up -d
+name: datafusion-remote
+
+services:
+  cube:
+    build: ../cube
+    environment:
+      CUBEJS_DEV_MODE: "false"
+      CUBEJS_API_SECRET: ${CUBE_API_SECRET}
+      DATAFUSION_API_URL: ${DATAFUSION_API_URL}
+      DATAFUSION_INTERNAL_TOKEN: ${INTERNAL_TOKEN}
+    ports:
+      - "4000:4000"
+
+  hop-web:
+    image: apache/hop-web:2.19.0
+    environment:
+      HOP_PROJECT_NAME: datafusion
+      HOP_PROJECT_FOLDER: /project
+      HOP_ENVIRONMENT_NAME: remote
+      HOP_ENVIRONMENT_CONFIG_FILE_NAME_PATHS: /environments/datafusion-remote.json
+      HOP_OPTIONS: >-
+        -XX:+AggressiveHeap -Dorg.eclipse.rap.rwt.resourceLocation=/tmp/rwt-resources
+        -DDATAFUSION_API_URL=${DATAFUSION_API_URL}
+        -DHOP_API_TOKEN=${HOP_API_TOKEN} -DHOP_ADMIN_TOKEN=${HOP_ADMIN_TOKEN}
+    volumes:
+      - ../hop/datafusion:/project
+      - ../hop/environments:/environments:ro
+      - ../data/shared:/shared
+    ports:
+      - "8080:8080"
